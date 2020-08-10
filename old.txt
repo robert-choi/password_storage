@@ -1,0 +1,3 @@
+School:userid@university.org:password123
+Gmail:googleid:passcode432
+Door code::12345
