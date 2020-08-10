@@ -4,9 +4,10 @@
 ###################################
 
 from cryptography.fernet import Fernet, InvalidToken
-from keygen import generate_key
+from getpass import getpass
 from os import path
 import pandas as pd
+from keygen import generate_key
 from p_info import pass_file, crypt_file
 
 
@@ -58,6 +59,48 @@ def edit_entries(data, command):
         return data
 
 
+def show_data(data, command):
+    """
+    Shows data from the given dataframe according to input commands
+    [head] -> shows the first n lines of data
+    [tail] -> shows the final n lines of data
+    [sed] -> shows specific line n, or lines n1->n2
+    :param data: DataFrame
+    :param command: list
+    """
+    if len(command) !=2:
+        print("Too many entries, I don't know what to do with this")
+    elif command[0] in ('head', 'tail'):
+        try:
+            redex = int(command[1])
+        except ValueError:
+            print("I can't show that index")
+            return
+        if not redex in data.index:
+            print("Index unavailable, use <cat> to check available indicies")
+        elif command[0] == 'head':
+            print(data.head(redex))
+        else:
+            print(data.tail(redex))
+    else:
+        redex = command[1].split(':')
+        for i, num in enumerate(redex):
+            try:
+                redex[i] = int(num)
+                if not int(num) in data.index:
+                    print("Index unavailable, use <cat> to check available indicies")
+                    raise ValueError
+            except ValueError:
+                print("I  can't show that index")
+                return
+        if len(redex) > 2:
+            print("Too many indicies I don't know what to do with this")
+        elif len(redex) == 1 or redex[0]==redex[1]:
+            print(data.iloc[redex[0]:redex[0]+1,:])
+        else:
+            print(data.iloc[min(redex):max(redex),:])
+
+
 def save_changes(data, fernet):
     """
     Re-writes crypt file with working version of dataframe
@@ -73,7 +116,7 @@ def save_changes(data, fernet):
 ###############################################################################
 
 def main():
-    password = input("Passwerd: ").encode()
+    password = getpass("Passwerd: ").encode()
     key = generate_key(password)
     f = Fernet(key)
 
@@ -100,7 +143,7 @@ def main():
             if cmd[0] in ('add', 'rm'):
                 pframe = edit_entries(pframe, cmd)
             elif cmd[0] in ('head', 'sed', 'tail'):
-                pass
+                show_data(pframe, cmd)
             elif cmd[0] == 'cat':
                 print(pframe)
             elif cmd[0] == 'wq':
@@ -108,11 +151,16 @@ def main():
                 save_changes(pframe, f)
                 return
             else:
-                print('Unknown command. List of known commands:\n'\
-                    '\tadd [loc:user:pass]: Add item to data\n'\
-                    '\trm [index]: Remove indexed item\n'\
-                    '\tcat: View working version\n'\
-                    '\twq: Save and quit')
+                print('Unknown command. List of known commands:\n'
+                    '\tadd: Add item to data\n'
+                    '\trm: Remove item by index\n'
+                    '\thead: Show first n lines\n'
+                    '\ttail: Show last n lines\n'
+                    '\tsed: Show nth line(s)\n'
+                    '\tcat: View working version\n'
+                    '\twq: Save and quit\n'
+                    'Or press CTRL+C to quit')
+
         except KeyboardInterrupt:
             running = False
             print('Exiting without saving...')
