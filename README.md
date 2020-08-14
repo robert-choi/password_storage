@@ -10,6 +10,20 @@ Dependancies: cryptography, pandas
 
 ## How to use
 
+### Installation
+```
+# clone the repo
+$ git clone https://github.com/robert-choi/password_storage.git
+
+# change the working directory to sherlock
+$ cd password_storage
+
+# install python and pip if they are not installed
+
+# install the requirements
+$ pip install -r requirements.txt
+```
+
 ### Initialization
 To initiate, save passwords in the *old.txt* document with 
 the formatting below:
